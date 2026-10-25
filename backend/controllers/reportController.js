@@ -52,7 +52,10 @@ export const createReport = async (req, res) => {
     });
     res.status(201).json(report);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+    console.error("REPORT ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to submit report. Please try again later.",
+    });
   }
 };

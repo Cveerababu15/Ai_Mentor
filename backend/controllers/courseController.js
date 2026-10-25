@@ -291,7 +291,8 @@ const addCourse = async (req, res) => {
     });
     res.status(201).json(course);
   } catch (error) {
-    res.status(500).json({ message: "Failed to add course", error: error.message });
+    console.error("ADD COURSE ERROR:", error);
+    res.status(500).json({ message: "Failed to add course" });
   }
 };
 

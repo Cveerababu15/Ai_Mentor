@@ -14,7 +14,8 @@ export const getUnreadCount = async (req, res) => {
 
     res.status(200).json({ count });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("NOTIFICATION ERROR:", error.message);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -28,7 +29,8 @@ export const getNotifications = async (req, res) => {
 
     res.status(200).json(notifications);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("NOTIFICATION ERROR:", error.message);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -50,7 +52,8 @@ export const markAsRead = async (req, res) => {
 
     res.status(200).json(notification);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("NOTIFICATION ERROR:", error.message);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -63,7 +66,8 @@ export const markAllAsRead = async (req, res) => {
 
     res.status(200).json({ message: "All notifications marked as read" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("NOTIFICATION ERROR:", error.message);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -78,7 +82,8 @@ export const clearAll = async (req, res) => {
 
     res.status(200).json({ message: "All notifications cleared" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("NOTIFICATION ERROR:", error.message);
+    res.status(500).json({ message: "Server error" });
   }
 };
 

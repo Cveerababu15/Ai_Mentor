@@ -152,14 +152,16 @@ app.use((err, req, res, _next) => {
     });
   }
 
+  // 1. Log full error internally for developers
   console.error("🔥 Global Error:", err);
 
-  res.status(err.status || 500).json({
+  const statusCode = err.status || err.statusCode || 500;
+  // 2. Sanitize: Never leak internal error message or stack trace for 500s in production
+  res.status(statusCode).json({
     success: false,
-    message: err.message || "Internal Server Error",
+    message: statusCode >= 500 ? "Internal Server Error" : err.message || "Internal Server Error",
   });
 });
-
 // ================= SERVER START =================
 const PORT = process.env.PORT || 5000;
 

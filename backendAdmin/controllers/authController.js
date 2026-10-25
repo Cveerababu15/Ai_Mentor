@@ -191,6 +191,6 @@ export const updateAdminStatus = async (req, res) => {
     res.status(200).json({ success: true, data: admin });
   } catch (error) {
     console.error("UPDATE ADMIN STATUS ERROR:", error.message || error);
-    res.status(500).json({ success: false, message: "Server Error: " + error.message });
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };

@@ -111,6 +111,7 @@ export const getAllCourseReports = async (req, res) => {
       data: reports,
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("COURSE REPORT ERROR:", err);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };

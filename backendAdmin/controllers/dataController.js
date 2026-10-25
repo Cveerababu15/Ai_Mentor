@@ -110,12 +110,20 @@ export const getAllEnrollments = async (req, res) => {
         data: enrollments.slice(start, start + limit),
       });
     }
+
+    // Handle unsupported or malformed query types cleanly
+    return res.status(400).json({
+      success: false,
+      message: "Invalid or unsupported query type parameter",
+    });
   } catch (error) {
-    console.error("GET ENROLLMENTS ERROR:", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("GET ENROLLMENTS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to process enrollment data. Please try again later.",
+    });
   }
 };
-
 export const getAllPayments = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page) || 1, 1),

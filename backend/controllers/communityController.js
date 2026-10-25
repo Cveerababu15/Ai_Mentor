@@ -768,7 +768,7 @@ const moderateReport = async (req, res) => {
     return res.status(result.status).json(result.body);
   } catch (error) {
     console.error("MODERATE REPORT ERROR:", error);
-    res.status(500).json({ message: error.message || "Server error" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
