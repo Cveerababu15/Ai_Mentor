@@ -1,5 +1,6 @@
 import { User, Course, CommunityPost, Report } from "../models/index.js";
 import { sequelize } from "../config/db.js";
+import { sendServerError } from "../utils/apiError.js";
 
 const ensureReportSeed = async () => {
   // Never seed sample/test data outside of development.
@@ -117,11 +118,7 @@ export const getAllEnrollments = async (req, res) => {
       message: "Invalid or unsupported query type parameter",
     });
   } catch (error) {
-    console.error("GET ENROLLMENTS ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to process enrollment data. Please try again later.",
-    });
+    return sendServerError(req, res, error, "dataController.getAllEnrollments");
   }
 };
 export const getAllPayments = async (req, res) => {
@@ -187,8 +184,7 @@ export const getAllPayments = async (req, res) => {
       data: payments.slice(start, start + limit),
     });
   } catch (error) {
-    console.error("GET PAYMENTS ERROR:", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return sendServerError(req, res, error, "dataController.getAllPayments");
   }
 };
 
@@ -209,8 +205,7 @@ export const getAllReports = async (req, res) => {
     });
     res.json({ success: true, data: reports });
   } catch (error) {
-    console.error("GET REPORTS ERROR:", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return sendServerError(req, res, error, "dataController.getAllReports");
   }
 };
 
@@ -227,8 +222,7 @@ export const getAllDiscussions = async (req, res) => {
 
     res.json({ success: true, data: discussions });
   } catch (error) {
-    console.error("GET ALL DISCUSSIONS ERROR:", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return sendServerError(req, res, error, "dataController.getAllDiscussions");
   }
 };
 
@@ -241,8 +235,7 @@ export const hideDiscussion = async (req, res) => {
     });
     res.json({ success: true, message: "Post hidden successfully" });
   } catch (error) {
-    console.error("HIDE DISCUSSION ERROR:", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return sendServerError(req, res, error, "dataController.hideDiscussion");
   }
 };
 
@@ -254,8 +247,7 @@ export const unhideDiscussion = async (req, res) => {
     });
     res.json({ success: true, message: "Post unhidden successfully" });
   } catch (error) {
-    console.error("UNHIDE DISCUSSION ERROR:", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return sendServerError(req, res, error, "dataController.unhideDiscussion");
   }
 };
 
@@ -267,7 +259,6 @@ export const deleteDiscussion = async (req, res) => {
     });
     res.json({ success: true, message: "Post deleted permanently" });
   } catch (error) {
-    console.error("DELETE DISCUSSION ERROR:", error.message);
-    res.status(500).json({ success: false, message: "Server Error" });
+    return sendServerError(req, res, error, "dataController.deleteDiscussion");
   }
 };

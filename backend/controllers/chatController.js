@@ -1,16 +1,19 @@
 import User from "../models/User.js";
+import Lesson from "../models/Lesson.js";
 import Preference from "../models/Preference.js";
+import { AppError, forwardError } from "../utils/error.js";
 // import { GoogleGenAI } from "@google/genai";
 import { detectIntent } from "../services/intentService.js";
 import { buildUserContext } from "../services/contextBuilder.js";
 import { askGemini } from "../services/geminiChatService.js";
 import { detectNavigation } from "../services/navigationService.js";
+import { APP_ROUTES } from "../services/routeMap.js";
 
 // const ai = new GoogleGenAI({
 //   apiKey: process.env.GEMINI_API_KEY,
 // });
 
-export const getChatContext = async (req, res) => {
+export const getChatContext = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id);
 
@@ -34,30 +37,41 @@ export const getChatContext = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-
-    res.status(500).json({
-      message: "Failed to load context",
-    });
+    return forwardError(
+      next,
+      res,
+      new AppError(
+        "Internal Server Error",
+        500,
+        "INTERNAL_SERVER_ERROR",
+        [],
+        error?.message || "Failed to load context",
+      ),
+    );
   }
 };
 
-export const chatWithAssistant = async (req, res) => {
+export const chatWithAssistant = async (req, res, next) => {
   try {
     const { message } = req.body;
 
     if (!message || !message.trim()) {
-      return res.status(400).json({
-        message: "Message is required",
-      });
+      return forwardError(
+        next,
+        res,
+        new AppError("Message is required", 400, "BAD_REQUEST", [], "Message is required"),
+      );
     }
 
     // Load user and preferences FIRST
     const user = await User.findByPk(req.user.id);
 
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      return forwardError(
+        next,
+        res,
+        new AppError("User not found", 404, "NOT_FOUND", [], "User not found"),
+      );
     }
 
     const userName = user.firstName || user.name || "Student";
@@ -138,23 +152,38 @@ export const chatWithAssistant = async (req, res) => {
       });
     }
 
-    //current lesson
+    // Current lesson and resume navigation
     if (intent.type === "current_lesson") {
       const courses = user.purchasedCourses || [];
-
-      const activeCourse = courses.find((c) => c.progress?.currentLesson);
+      const activeCourse = courses.find((course) => course.progress?.currentLesson);
 
       if (!activeCourse) {
-        return res.json({
-          reply: "I couldn't find an active lesson.",
-        });
+        return res.json({ reply: "I couldn't find an active lesson." });
       }
 
+      const savedLesson = activeCourse.progress.currentLesson;
+      const lessonId =
+        typeof savedLesson === "object" && savedLesson !== null
+          ? (savedLesson.lessonId ?? savedLesson.id)
+          : null;
+
+      let lessonTitle =
+        typeof savedLesson === "object" && savedLesson !== null ? savedLesson.title : null;
+
+      if (lessonId && !lessonTitle) {
+        const lesson = await Lesson.findByPk(lessonId);
+        lessonTitle = lesson?.title;
+      }
+
+      const displayLesson =
+        lessonTitle || (lessonId ? `lesson ${lessonId}` : `lesson ${savedLesson}`);
+
       return res.json({
-        reply: `You were last studying lesson ${activeCourse.progress.currentLesson} in ${activeCourse.courseTitle}.`,
+        reply: `You were last studying ${displayLesson} in ${activeCourse.courseTitle}.`,
+        route: activeCourse.courseId && lessonId ? `/learning/${activeCourse.courseId}` : null,
+        lessonId: lessonId || null,
       });
     }
-
     // Settings
     if (intent.type === "settings_info") {
       return res.json({
@@ -204,14 +233,17 @@ export const chatWithAssistant = async (req, res) => {
     // Check if Gemini returned a route
     let route = null;
 
-    const routeMatch = geminiReply.match(/ROUTE:(.+)/i);
+    const routeMatch = geminiReply.match(/ROUTE:([^\r\n]*)/i);
 
     if (routeMatch) {
-      route = routeMatch[1].trim();
+      const requestedRoute = routeMatch[1].trim();
+      if (Object.values(APP_ROUTES).includes(requestedRoute)) {
+        route = requestedRoute;
+      }
     }
 
     // Remove ROUTE from visible message
-    const cleanedReply = geminiReply.replace(/ROUTE:.*/i, "").trim();
+    const cleanedReply = geminiReply.replace(/ROUTE:[^\r\n]*/gi, "").trim();
 
     return res.json({
       reply: cleanedReply,
