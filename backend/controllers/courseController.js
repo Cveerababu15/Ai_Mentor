@@ -3,7 +3,6 @@ import { sequelize } from "../config/db.js";
 import { courseDuration } from "../utils/courseDuration.js";
 import {
   AppError,
-  BadRequestError,
   ForbiddenError,
   NotFoundError,
   forwardError,
